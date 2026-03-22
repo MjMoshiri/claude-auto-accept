@@ -1,12 +1,19 @@
 {
   "name": "auto-accept",
+  "description": "LLM-powered auto-accept for Claude Code permission requests",
+  "owner": {
+    "name": "mjmoshiri",
+    "email": "thisismjmoshiri@gmail.com"
+  },
   "plugins": [
     {
       "name": "auto-accept",
       "description": "LLM-powered auto-accept for Claude Code permission requests",
-      "source": {
-        "type": "github",
-        "repo": "MjMoshiri/claude-auto-accept"
+      "version": "1.0.0",
+      "source": "./",
+      "author": {
+        "name": "mjmoshiri",
+        "email": "thisismjmoshiri@gmail.com"
       }
     }
   ]
