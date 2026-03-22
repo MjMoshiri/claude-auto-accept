@@ -11,9 +11,7 @@ A Claude Code plugin that uses an LLM to auto-accept or deny permission requests
 ## Install
 
 ```bash
-claude plugin add /path/to/auto-accept
-# or from GitHub:
-claude plugin add https://github.com/mjmoshiri/auto-accept
+claude plugin add https://github.com/MjMoshiri/claude-auto-accept
 ```
 
 ## Usage
