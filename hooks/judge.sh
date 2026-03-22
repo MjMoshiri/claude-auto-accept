@@ -54,8 +54,8 @@ Claude Code wants to use this tool:
 
 Based ONLY on the policy above, should this tool call be allowed?
 
-Respond with ONLY a JSON object — no markdown, no explanation outside the JSON:
-{\"decision\": \"allow\", \"reason\": \"brief reason\"}
+Think briefly, then put your final answer inside <answer> tags as a JSON object:
+<answer>{\"decision\": \"allow\", \"reason\": \"brief reason\"}</answer>
 
 Rules:
 - \"allow\"  → clearly permitted by the policy
@@ -67,26 +67,26 @@ When in doubt, choose \"ask\"."
 JUDGE_RESPONSE=$(claude -p "$PROMPT" --model "$MODEL" 2>/dev/null) || exit 0
 
 # ── Parse the judge response ─────────────────────────────────────────
-# Try direct parse first, then try extracting JSON from markdown fences
-DECISION=$(echo "$JUDGE_RESPONSE" | jq -r '.decision' 2>/dev/null) || true
+# Extract JSON from <answer> tags — the most reliable path
+ANSWER_BLOCK=$(echo "$JUDGE_RESPONSE" | sed -n 's/.*<answer>\(.*\)<\/answer>.*/\1/p' | head -1)
 
-if [ -z "$DECISION" ] || [ "$DECISION" = "null" ]; then
-  # Try extracting JSON from markdown code fences
-  EXTRACTED=$(echo "$JUDGE_RESPONSE" | sed -n '/^```/,/^```/p' | grep -v '^```' | head -5)
-  if [ -n "$EXTRACTED" ]; then
-    DECISION=$(echo "$EXTRACTED" | jq -r '.decision' 2>/dev/null) || true
-    JUDGE_RESPONSE="$EXTRACTED"
-  fi
+if [ -n "$ANSWER_BLOCK" ]; then
+  DECISION=$(echo "$ANSWER_BLOCK" | jq -r '.decision' 2>/dev/null) || true
+  REASON=$(echo "$ANSWER_BLOCK" | jq -r '.reason // "auto-accept policy"' 2>/dev/null) || REASON="auto-accept policy"
 fi
 
-if [ -z "$DECISION" ] || [ "$DECISION" = "null" ]; then
-  # Last resort: grep for a JSON object in the response
+# Fallback: try parsing the whole response as JSON
+if [ -z "${DECISION:-}" ] || [ "$DECISION" = "null" ]; then
+  DECISION=$(echo "$JUDGE_RESPONSE" | jq -r '.decision' 2>/dev/null) || true
+  REASON=$(echo "$JUDGE_RESPONSE" | jq -r '.reason // "auto-accept policy"' 2>/dev/null) || REASON="auto-accept policy"
+fi
+
+# Last resort: grep for a JSON object anywhere in the response
+if [ -z "${DECISION:-}" ] || [ "$DECISION" = "null" ]; then
   EXTRACTED=$(echo "$JUDGE_RESPONSE" | grep -o '{[^}]*}' | head -1)
   DECISION=$(echo "$EXTRACTED" | jq -r '.decision' 2>/dev/null) || exit 0
-  JUDGE_RESPONSE="$EXTRACTED"
+  REASON=$(echo "$EXTRACTED" | jq -r '.reason // "auto-accept policy"' 2>/dev/null) || REASON="auto-accept policy"
 fi
-
-REASON=$(echo "$JUDGE_RESPONSE" | jq -r '.reason // "auto-accept policy"' 2>/dev/null) || REASON="auto-accept policy"
 
 # ── Emit hook output ─────────────────────────────────────────────────
 case "$DECISION" in
