@@ -1,0 +1,13 @@
+{
+  "name": "auto-accept",
+  "plugins": [
+    {
+      "name": "auto-accept",
+      "description": "LLM-powered auto-accept for Claude Code permission requests",
+      "source": {
+        "type": "github",
+        "repo": "MjMoshiri/claude-auto-accept"
+      }
+    }
+  ]
+}
