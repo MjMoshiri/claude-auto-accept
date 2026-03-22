@@ -1,5 +1,0 @@
-{
-  "name": "auto-accept",
-  "version": "1.0.0",
-  "description": "LLM-powered auto-accept for Claude Code permission requests. Uses a policy prompt to judge whether tool calls should be allowed, denied, or deferred to the user."
-}
