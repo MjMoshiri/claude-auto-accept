@@ -1,11 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# ── Guard: no policy → no-op ────────────────────────────────────────
-if [ -z "${AUTO_ACCEPT_POLICY:-}" ]; then
-  exit 0
-fi
-
 # ── Dependencies ─────────────────────────────────────────────────────
 for cmd in jq claude; do
   if ! command -v "$cmd" &>/dev/null; then
@@ -19,6 +14,23 @@ INPUT=$(cat)
 
 HOOK_EVENT=$(echo "$INPUT" | jq -r '.hook_event_name')
 TOOL_NAME=$(echo "$INPUT" | jq -r '.tool_name // "unknown"')
+SESSION_ID=$(echo "$INPUT" | jq -r '.session_id // ""')
+
+# ── Resolve policy: file-based (per-session) → env var (global) ─────
+# File-based policies allow mid-session changes from external UIs
+# (e.g. Claude-Tab) by writing to ~/.claude/auto-accept-policies/{session_id}
+POLICY="${AUTO_ACCEPT_POLICY:-}"
+if [ -n "$SESSION_ID" ]; then
+  POLICY_FILE="$HOME/.claude/auto-accept-policies/$SESSION_ID"
+  if [ -f "$POLICY_FILE" ]; then
+    POLICY=$(cat "$POLICY_FILE")
+  fi
+fi
+
+# No policy → no-op
+if [ -z "$POLICY" ]; then
+  exit 0
+fi
 
 # ── Mode check ───────────────────────────────────────────────────────
 # "permission" = only act on PermissionRequest (default)
@@ -45,7 +57,7 @@ PROMPT="You are a permission gate for a Claude Code session.
 
 The user set this policy for the session:
 <policy>
-${AUTO_ACCEPT_POLICY}
+${POLICY}
 </policy>
 
 Claude Code wants to use this tool:
