@@ -4,7 +4,7 @@ A Claude Code plugin that uses an LLM to auto-accept or deny permission requests
 
 ## How it works
 
-1. You set a policy via environment variable before starting a Claude Code session
+1. You set a policy via environment variable or per-session policy file
 2. When Claude Code asks for permission, the plugin pipes the tool details + your policy to a fast `claude -p` call
 3. The judge LLM decides: **allow**, **deny**, or **ask** (fall through to normal dialog)
 
@@ -35,9 +35,21 @@ AUTO_ACCEPT_MODE=all AUTO_ACCEPT_POLICY="Only allow read operations." claude
 
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
-| `AUTO_ACCEPT_POLICY` | Yes | — | Natural language policy for the session |
+| `AUTO_ACCEPT_POLICY` | No | — | Natural language policy for the session (global fallback) |
 | `AUTO_ACCEPT_MODEL` | No | `haiku` | Model for the judge call (`haiku`, `sonnet`, `opus`) |
 | `AUTO_ACCEPT_MODE` | No | `permission` | `permission` = only PermissionRequest hooks, `all` = PreToolUse + PermissionRequest |
+
+### File-based policy (per-session)
+
+The plugin also checks for a per-session policy file at:
+
+```
+~/.claude/auto-accept-policies/{session_id}
+```
+
+This enables external tools (like [Claude-Tab](https://github.com/MjMoshiri/Claude-Tab)) to set and change policies mid-session. The file simply contains the policy text.
+
+**Priority:** file-based policy > `AUTO_ACCEPT_POLICY` env var. If neither exists, the plugin is a no-op.
 
 ## Modes
 
