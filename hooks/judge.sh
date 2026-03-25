@@ -71,9 +71,8 @@ Think briefly, then put your final answer inside <answer> tags as a JSON object:
 <answer>{\"decision\": \"allow\", \"reason\": \"brief reason\"}</answer>
 
 Rules:
-- \"allow\"  → clearly permitted by the policy
-- \"deny\"   → clearly violates the policy
-- \"ask\"    → ambiguous or not covered by the policy (let the user decide)
+- \"allow\" → clearly permitted by the policy
+- \"ask\"   → not covered, ambiguous, or potentially risky (let the user decide)
 
 When in doubt, choose \"ask\"."
 
@@ -123,29 +122,8 @@ case "$DECISION" in
       }'
     fi
     ;;
-  deny)
-    if [ "$HOOK_EVENT" = "PreToolUse" ]; then
-      jq -n --arg reason "$REASON" '{
-        hookSpecificOutput: {
-          hookEventName: "PreToolUse",
-          permissionDecision: "deny",
-          permissionDecisionReason: ("Denied by policy: " + $reason)
-        }
-      }'
-    else
-      jq -n --arg reason "$REASON" '{
-        hookSpecificOutput: {
-          hookEventName: "PermissionRequest",
-          decision: {
-            behavior: "deny",
-            message: ("Denied by policy: " + $reason)
-          }
-        }
-      }'
-    fi
-    ;;
   *)
-    # "ask" or unrecognized → fall through to normal permission dialog
+    # "ask", "deny", or unrecognized → fall through to normal permission dialog
     exit 0
     ;;
 esac
