@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # ── Dependencies ─────────────────────────────────────────────────────
-for cmd in jq claude; do
+for cmd in jq claude python3; do
   if ! command -v "$cmd" &>/dev/null; then
     echo "auto-accept: '$cmd' not found, skipping" >&2
     exit 0
@@ -86,7 +86,24 @@ Rules:
 
 When in doubt, choose \"ask\"."
 
-JUDGE_RESPONSE=$(claude -p "$PROMPT" --model "$MODEL" 2>/dev/null) || exit 0
+# Use stream-json to extract text content — works around a claude -p bug
+# where the result field is empty when the model uses extended thinking.
+# Unset CLAUDE_TABS_SESSION_ID so the judge subprocess doesn't trigger
+# hooks back to Claude-Tab under the parent session.
+# Redirect stdin from /dev/null since the hook already consumed it.
+JUDGE_RESPONSE=$(CLAUDE_TABS_SESSION_ID="" claude -p "$PROMPT" --model "$MODEL" \
+  --output-format stream-json --verbose < /dev/null 2>/dev/null \
+  | python3 -c "
+import sys, json
+for line in sys.stdin:
+    try:
+        d = json.loads(line.strip())
+        if d.get('type') == 'assistant':
+            for c in d.get('message', {}).get('content', []):
+                if c.get('type') == 'text':
+                    print(c['text'], end='')
+    except: pass
+") || exit 0
 
 # ── Parse the judge response ─────────────────────────────────────────
 # Extract JSON from <answer> tags — the most reliable path
@@ -105,7 +122,7 @@ fi
 
 # Last resort: grep for a JSON object anywhere in the response
 if [ -z "${DECISION:-}" ] || [ "$DECISION" = "null" ]; then
-  EXTRACTED=$(echo "$JUDGE_RESPONSE" | grep -o '{[^}]*}' | head -1)
+  EXTRACTED=$(echo "$JUDGE_RESPONSE" | grep -o '{[^}]*}' | head -1) || true
   DECISION=$(echo "$EXTRACTED" | jq -r '.decision' 2>/dev/null) || exit 0
   REASON=$(echo "$EXTRACTED" | jq -r '.reason // "auto-accept policy"' 2>/dev/null) || REASON="auto-accept policy"
 fi

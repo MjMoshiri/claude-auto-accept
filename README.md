@@ -69,6 +69,7 @@ If the judge call fails (timeout, API error, bad response), the plugin silently 
 
 - `claude` CLI (for the `-p` judge call)
 - `jq` (for JSON parsing)
+- `python3` (for parsing streamed judge output)
 
 ## Examples
 
