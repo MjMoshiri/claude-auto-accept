@@ -28,8 +28,18 @@ if [ -n "$SESSION_ID" ]; then
   fi
 fi
 
-# No policy → no-op
+# No policy → no-op (normal ask cycle)
 if [ -z "$POLICY" ]; then
+  exit 0
+fi
+
+# "*" → allow all without calling the judge
+if [ "$POLICY" = "*" ]; then
+  if [ "$HOOK_EVENT" = "PreToolUse" ]; then
+    jq -n '{hookSpecificOutput:{hookEventName:"PreToolUse",permissionDecision:"allow",permissionDecisionReason:"Auto-accepted: allow-all mode"}}'
+  else
+    jq -n '{hookSpecificOutput:{hookEventName:"PermissionRequest",decision:{behavior:"allow"}}}'
+  fi
   exit 0
 fi
 
