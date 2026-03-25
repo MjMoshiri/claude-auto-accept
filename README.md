@@ -38,6 +38,7 @@ AUTO_ACCEPT_MODE=all AUTO_ACCEPT_POLICY="Only allow read operations." claude
 | `AUTO_ACCEPT_POLICY` | No | — | Natural language policy for the session (global fallback) |
 | `AUTO_ACCEPT_MODEL` | No | `haiku` | Model for the judge call (`haiku`, `sonnet`, `opus`) |
 | `AUTO_ACCEPT_MODE` | No | `permission` | `permission` = only PermissionRequest hooks, `all` = PreToolUse + PermissionRequest |
+| `CLAUDE_TABS_SESSION_ID` | No | — | Override session ID for policy file lookup (set automatically by Claude-Tab) |
 
 ### File-based policy (per-session)
 

@@ -14,11 +14,12 @@ INPUT=$(cat)
 
 HOOK_EVENT=$(echo "$INPUT" | jq -r '.hook_event_name')
 TOOL_NAME=$(echo "$INPUT" | jq -r '.tool_name // "unknown"')
-SESSION_ID=$(echo "$INPUT" | jq -r '.session_id // ""')
+SESSION_ID="${CLAUDE_TABS_SESSION_ID:-$(echo "$INPUT" | jq -r '.session_id // ""')}"
 
 # ── Resolve policy: file-based (per-session) → env var (global) ─────
 # File-based policies allow mid-session changes from external UIs
 # (e.g. Claude-Tab) by writing to ~/.claude/auto-accept-policies/{session_id}
+# CLAUDE_TABS_SESSION_ID env var overrides the session_id from hook input
 POLICY="${AUTO_ACCEPT_POLICY:-}"
 if [ -n "$SESSION_ID" ]; then
   POLICY_FILE="$HOME/.claude/auto-accept-policies/$SESSION_ID"
