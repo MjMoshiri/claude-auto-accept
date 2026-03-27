@@ -92,7 +92,7 @@ When in doubt, choose \"ask\"."
 # hooks back to Claude-Tab under the parent session.
 # Redirect stdin from /dev/null since the hook already consumed it.
 JUDGE_RESPONSE=$(CLAUDE_TABS_SESSION_ID="" claude -p "$PROMPT" --model "$MODEL" \
-  --output-format stream-json --verbose < /dev/null 2>/dev/null \
+  --output-format stream-json --verbose --no-session-persistence < /dev/null 2>/dev/null \
   | python3 -c "
 import sys, json
 for line in sys.stdin:
