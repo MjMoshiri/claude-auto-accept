@@ -108,3 +108,10 @@ AUTO_ACCEPT_MODE=all AUTO_ACCEPT_POLICY="Allow Read, Glob, Grep, and read-only B
 ```bash
 AUTO_ACCEPT_POLICY="*" claude
 ```
+
+## License
+
+Copyright (C) 2026 MohammadJavad Moshiri
+
+This project is licensed under the GNU Affero General Public License,
+version 3 or later. See [LICENSE](LICENSE) for details.
